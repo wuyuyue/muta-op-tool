@@ -7,7 +7,11 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 const {spawn} = require('child_process')
-
+const fs = require('fs')
+const path = require('path')
+const commandDir = '/home/op/huobi_test_script/'
+const jsonFile = 'shake.json'
+const exec = `${commandDir}fabfile.py`
 app.prepare().then(() => {
   const server = express()
   // server.use(basicAuth({
@@ -16,21 +20,28 @@ app.prepare().then(() => {
   server.use(express.json())
   server.post('/command', (req, res) => {
     // console.log(req.headers)
-    console.log(req.body)
-   
-    const ps = spawn('ipconfig', []);
-    res.setHeader('Transfer-Encoding', 'chunked');
+    const command = req.body.command
+    console.log(command)
 
-    ps.stdout.on('data', (d) => {
-      res.write(d)
-    });
+    try {
+      fs.writeFileSync(path.join(commandDir,jsonFile),JOSN.stringify(command))
+      const ps = spawn('python', [exec]);
+      res.setHeader('Transfer-Encoding', 'chunked');
+  
+      ps.stdout.on('data', (d) => {
+        res.write(d)
+      });
+      
+      ps.stderr.on('data', (d) => {
+        res.write(d)
+      });
+      ps.on('close', () => {
+        res.end()
+      });
+    }catch(e){
+      res.end(e);
+    }
     
-    ps.stderr.on('data', (d) => {
-      res.write(d)
-    });
-    ps.on('close', () => {
-      res.end()
-    });
   })
 
   server.all('*', (req, res) => {

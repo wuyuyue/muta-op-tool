@@ -172,7 +172,7 @@ const methods = [
   },
   {
     name: 'test_chain',
-    params: ['token','peer','boot','interval','propose','prevote','precommit'],
+    params: ['token','peers','boots','interval','propose','prevote','precommit'],
 
   },
   {
@@ -220,9 +220,9 @@ const methods = [
 const Home = () => {
   const [input,setInput]=useState('')
   const [output,setOutput]=useState('')
-
+  const [mask,setMask] = useState(false)
   const send=()=>{
-    let command = `fab`
+    let command = {}
     const peerIpElements = document.querySelectorAll('.peerIp:checked')
     const peerIpsValue = []
     if(peerIpElements.length>0){
@@ -232,19 +232,24 @@ const Home = () => {
       }
     }
     if(peerIpsValue.length> 0) {
-      command += ' -H '
-      for(var i=0;i<peerIpsValue.length;i++) {
-        command+='\'' +peerIpsValue[i]+'\''
-        if(i!==peerIpsValue.length-1){
-          command+=','
-        }
-      }
+      command["peers"] = peerIpsValue
+    }
 
+    const bootIpElements = document.querySelectorAll('.bootIp:checked')
+    const bootIpsValue = []
+    if(bootIpElements.length>0){
+      for(var i=0;i<bootIpElements.length;i++) {
+        const element = bootIpElements[i]
+        bootIpsValue.push(element.value)
+      }
+    }
+    if(bootIpsValue.length> 0) {
+      command["boots"] = bootIpsValue
     }
 
     const methodElement = document.querySelector('input[name="methodName"]:checked')
     if(methodElement){
-      command+=` ${methodElement.value}`
+      command['method'] = methodElement.value
     } else {
       alert('method name not empty')
       return
@@ -265,24 +270,17 @@ const Home = () => {
 
 
     paramsNotEmptyValue.forEach((d,i)=>{
-      if(i===0){
-        command+=':'
-      }
-      if(d.name=='peer') {
-        // command+=d.value
-      } else if(d.name=='peer') {
-        // command+=d.value
+      console.log(d)
+      if(d.name=='peers') {
+      } else if(d.name=='boots') {
+        command['boots'] = bootIpsValue
       } else {
-        command+=d.value
-      }
-      
-      if(i!==paramsNotEmptyValue.length-1){
-        command+=','
+        command[d.name] = d.value
       }
     })
 
-    setInput(command)
-
+    setInput(JSON.stringify(command))
+    setMask(true)
     fetch('/command',{
       method: "post",
       credentials: 'include',
@@ -298,10 +296,13 @@ const Home = () => {
     }) 
     .then((text)=>{
       // console.log(blob)
+      setMask(false)
+
       setOutput(text)
 
     })
     .catch(function(err) { 
+      setMask(false)
       console.log('Fetch Error : %S', err); 
     })
   }
@@ -311,11 +312,10 @@ const Home = () => {
       <Head>
         <title>muta op tool</title>
       </Head>
-  
       <div className='app'>
         <h1 className='title'>muta op tool</h1>
         <fieldset>
-          <legend className="label">peer</legend>
+          <legend className="label">peers</legend>
           <div>
             {
               ipList.map((d)=>{
@@ -328,9 +328,8 @@ const Home = () => {
             }
           </div>
         </fieldset>
-
         <fieldset>
-          <legend className="label">boot</legend>
+          <legend className="label">boots</legend>
           <div>
             {
               ipList.map((d)=>{
@@ -343,7 +342,6 @@ const Home = () => {
             }
           </div>
         </fieldset>
-        
         <fieldset>
           <legend className="label">method</legend>
           <div>
@@ -379,7 +377,6 @@ const Home = () => {
             </div>
           </div>
         </fieldset>
-        
         <fieldset>
           <legend>input</legend>
           <div>
@@ -393,11 +390,29 @@ const Home = () => {
             {output}
           </div>
         </fieldset>
+        {mask?<div className="mask"></div>:null}
       </div>
   
       <style jsx>{`
+        :global(*) {
+          // margin: 0;
+          // padding: 0;
+        }
         .app {
           width: 100%;
+          height: 100vh;
+        }
+        .mask{
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.7);
+          top: 0;
+          left: 0;
+          position: fixed;
+          z-index: 999;
         }
         .title {
           margin: 0;
