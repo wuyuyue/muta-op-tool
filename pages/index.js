@@ -342,54 +342,63 @@ const Home = () => {
             }
           </div>
         </fieldset>
-        <fieldset>
-          <legend className="label">method</legend>
-          <div>
-            <div>
-              {
-                methods.map((d)=>{
-                  return (
-                    <div className='column'>
-                      <div className='row'>
-                        <input type='radio' name='methodName' value={d.name} /> 
-                        <div>{d.name}</div>
-                        <div className='row'>
-                          {
-                            d.params.map((subD)=>{
-                              if(subD==='boot'||subD==='peer'){
-                                return (
-                                  <input type='text' disabled className='otherParams' placeholder={subD} id={subD} />
-                                )
-                              }else {
-                                return (
-                                  <input type='text' className='otherParams' placeholder={subD} id={subD} />
-                                )
-                              }
-                              
-                            })
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })
-              }
+       
+        <div className="row">
+            <div style={{flex:1}}>
+              <fieldset>
+                <legend className="label">method</legend>
+                <div>
+                  <div>
+                    {
+                      methods.map((d)=>{
+                        return (
+                          <div className='column'>
+                            <div className='row method'>
+                              <input type='radio' name='methodName' value={d.name} /> 
+                              <div>{d.name}</div>
+                              <div className='column'>
+                                {
+                                  d.params.map((subD)=>{
+                                    if(subD==='boot'||subD==='peer'){
+                                      return (
+                                        <input type='text' disabled className='otherParams' placeholder={subD} id={subD} />
+                                      )
+                                    }else {
+                                      return (
+                                        <input type='text' className='otherParams' placeholder={subD} id={subD} />
+                                      )
+                                    }
+                                    
+                                  })
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })
+                    }
+                  </div>
+                </div>
+              </fieldset>
             </div>
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>input</legend>
-          <div>
-            <div><input type='button' value='send' onClick={send}/></div>
-            <div>{input}</div>
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>output</legend>
-          <div>
-            {output}
-          </div>
-        </fieldset>
+            <div className="column" style={{flex:1}}>
+              <fieldset style={{ flex: 1}}>
+                <legend>input</legend>
+                <div>
+                  <div><input type='button' value='send' onClick={send}/></div>
+                  <div>{input}</div>
+                </div>
+              </fieldset>
+              <fieldset style={{ flex: 1}}>
+                <legend>output</legend>
+                <div>
+                  {output}
+                </div>
+              </fieldset>
+            </div>
+        </div>
+        
+        
         {mask?<div className="mask"></div>:null}
       </div>
   
@@ -424,18 +433,30 @@ const Home = () => {
         .label {
           font-weight: bold;
         }
-        .row,.column {
+        .vhCenter {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
           margin-top: 10px;
         }
-        .row >div {
-          width: 200px;
+        .row {
+          display: flex;
         }
-        .row > input {
-          flex: 1;
+        .column {
+          display: flex;
+          flex-direction: column;
         }
+        .method {
+          margin-top:20px;
+        }
+        .method >div:nth-child(3) {
+          flex: 1
+          margin-top: 10px;
+          margin-left: 10px;
+        }
+        // .method > input {
+        //   flex: 1;
+        // }
       `}</style>
     </div>
   )

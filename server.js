@@ -24,7 +24,7 @@ app.prepare().then(() => {
     console.log(command)
 
     try {
-      fs.writeFileSync(path.join(commandDir,jsonFile),JOSN.stringify(command))
+      fs.writeFileSync(path.join(commandDir,jsonFile),JSON.stringify(command))
       const ps = spawn('python', [exec]);
       res.setHeader('Transfer-Encoding', 'chunked');
   
@@ -39,7 +39,7 @@ app.prepare().then(() => {
         res.end()
       });
     }catch(e){
-      res.end(e);
+      res.end(e.message);
     }
     
   })
