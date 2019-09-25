@@ -24,9 +24,10 @@ app.prepare().then(() => {
     console.log(command)
 
     try {
+      res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+      res.setHeader('Transfer-Encoding', 'chunked');
       fs.writeFileSync(path.join(commandDir,jsonFile),JSON.stringify(command))
       const ps = spawn('python', [exec]);
-      res.setHeader('Transfer-Encoding', 'chunked');
   
       ps.stdout.on('data', (d) => {
         res.write(d)
@@ -35,11 +36,14 @@ app.prepare().then(() => {
       ps.stderr.on('data', (d) => {
         res.write(d)
       });
-      ps.on('close', () => {
+      ps.on('close', (data) => {
+        res.write('0\r\n\r\n')
         res.end()
       });
     }catch(e){
-      res.end(e.message);
+      res.write(e.message)
+      res.write('0\r\n\r\n')
+      res.end()
     }
     
   })

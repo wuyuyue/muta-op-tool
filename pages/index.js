@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useState,useEffect} from 'react'
 import Head from 'next/head'
 
 
@@ -160,24 +160,29 @@ const methods = [
   {
     name: 'get_binary',
     params: ['branch'],
+    defaultValues: ['local'],
   },
   {
     name: 'distr_binary',
     params: ['token'],
+    defaultValues: ['0000'],
   },
   {
     name: 'rename_binary',
     params: ['token'],
-
+    defaultValues: ['0000'],
   },
   {
     name: 'test_chain',
     params: ['token','peers','boots','interval','propose','prevote','precommit'],
+    defaultValues: ['0000','[]','[]','3000','10','10','10'],
 
   },
   {
     name: 'get_chain_logs',
     params: ['token'],
+    defaultValues: ['0000'],
+
   },
   {
     name: 'shutdown_chain',
@@ -186,22 +191,32 @@ const methods = [
   {
     name: 'distr_net_binary',
     params: ['token'],
+    defaultValues: ['0000'],
+
   },
   {
     name: 'rename_net_binary',
     params: ['token'],
+    defaultValues: ['0000'],
+
   },
   {
     name: 'test_net',
-    params: ['token','peer','boot','interval','propose','prevote','precommit'],
+    params: ['token','peers','boots','mode','packet','batch'],
+    defaultValues: ['0000','[]','[]','tentacle','400','20'],
+
   },
   {
     name: 'get_net_logs',
     params: ['token'],
+    defaultValues: ['0000'],
+
   },
   {
     name: 'shutdown_net',
     params: [],
+    defaultValues: [],
+
   },
 ]
 
@@ -221,6 +236,12 @@ const Home = () => {
   const [input,setInput]=useState('')
   const [output,setOutput]=useState('')
   const [mask,setMask] = useState(false)
+  useEffect(() => {
+    const element = document.querySelector('#test_net')
+    if(element){
+      element.checked = true
+    }
+  },[])
   const send=()=>{
     let command = {}
     const peerIpElements = document.querySelectorAll('.peerIp:checked')
@@ -270,7 +291,6 @@ const Home = () => {
 
 
     paramsNotEmptyValue.forEach((d,i)=>{
-      console.log(d)
       if(d.name=='peers') {
       } else if(d.name=='boots') {
         command['boots'] = bootIpsValue
@@ -281,6 +301,7 @@ const Home = () => {
 
     setInput(JSON.stringify(command))
     setMask(true)
+    setOutput("")
     fetch('/command',{
       method: "post",
       credentials: 'include',
@@ -292,19 +313,51 @@ const Home = () => {
       body: JSON.stringify({command})
     })
     .then(function(res) { 
-      return res.text()
+      var reader = res.body.getReader();  
+      reader.read().then(function processResult(result) {
+        // Result objects contain two properties:
+        // done  - true if the stream has already given you all its data.
+        // value - some data. Always undefined when done is true.
+        if (result.done) {
+          console.log("Fetch complete");
+          setMask(false)
+          return;
+        } else {
+          // do something with each chunk  
+          const Uint8ArrayToString=(fileData)=>{
+            var dataString = "";
+            for (var i = 0; i < fileData.length; i++) {
+              dataString += String.fromCharCode(fileData[i]);
+            }
+           
+            return dataString
+          }
+        
+          setOutput(output+Uint8ArrayToString(result.value))
+          // Read some more, and call this function again
+          return reader.read().then(processResult);
+        }
+    
+       
+      })
     }) 
-    .then((text)=>{
-      // console.log(blob)
-      setMask(false)
-
-      setOutput(text)
-
-    })
     .catch(function(err) { 
       setMask(false)
       console.log('Fetch Error : %S', err); 
+      setOutput(err.message)
     })
+  }
+
+  const selectAll = (e,className)=>{
+    // console.log(e.target)
+    const checked = e.target.checked
+    const peerIpElements = document.querySelectorAll(className)
+    if(peerIpElements.length>0){
+      for(var i=0;i<peerIpElements.length;i++) {
+        const element = peerIpElements[i]
+        element.checked = checked
+      }
+    }
   }
   
   return (
@@ -315,7 +368,7 @@ const Home = () => {
       <div className='app'>
         <h1 className='title'>muta op tool</h1>
         <fieldset>
-          <legend className="label">peers</legend>
+          <legend className="label">peers<span><input type='checkbox' onChange={(e)=>{selectAll(e,'.peerIp')}}/>全选</span></legend>
           <div>
             {
               ipList.map((d)=>{
@@ -329,7 +382,7 @@ const Home = () => {
           </div>
         </fieldset>
         <fieldset>
-          <legend className="label">boots</legend>
+          <legend className="label">boots<span><input type='checkbox' onChange={(e)=>{selectAll(e,'.bootIp')}}/>全选</span></legend>
           <div>
             {
               ipList.map((d)=>{
@@ -354,18 +407,24 @@ const Home = () => {
                         return (
                           <div className='column'>
                             <div className='row method'>
-                              <input type='radio' name='methodName' value={d.name} /> 
+                              <input type='radio' name='methodName' value={d.name} id={d.name} /> 
                               <div>{d.name}</div>
                               <div className='column'>
                                 {
-                                  d.params.map((subD)=>{
+                                  d.params.map((subD,i)=>{
                                     if(subD==='boot'||subD==='peer'){
                                       return (
-                                        <input type='text' disabled className='otherParams' placeholder={subD} id={subD} />
+                                        <div>
+                                          <input type='text' disabled className='otherParams' placeholder={subD} id={subD} defaultValue={d.defaultValues[i]} />
+                                          <span>{subD}</span>
+                                        </div>
                                       )
                                     }else {
                                       return (
-                                        <input type='text' className='otherParams' placeholder={subD} id={subD} />
+                                        <div>
+                                          <input type='text' className='otherParams' placeholder={subD} id={subD} defaultValue={d.defaultValues[i]} />
+                                          <span>{subD}</span>
+                                        </div>
                                       )
                                     }
                                     
@@ -381,17 +440,17 @@ const Home = () => {
                 </div>
               </fieldset>
             </div>
-            <div className="column" style={{flex:1}}>
-              <fieldset style={{ flex: 1}}>
+            <div className="column inputOutput" style={{flex:1}}>
+              <fieldset style={{ minHeight: 100}}>
                 <legend>input</legend>
                 <div>
-                  <div><input type='button' value='send' onClick={send}/></div>
-                  <div>{input}</div>
+                  <div><button onClick={send} style={{ width: 100, height: 30,}}>send</button></div>
+                  <div style={{ wordBreak: 'break-all'}}>{input}</div>
                 </div>
               </fieldset>
               <fieldset style={{ flex: 1}}>
                 <legend>output</legend>
-                <div>
+                <div  style={{ wordBreak: 'break-all'}}>
                   {output}
                 </div>
               </fieldset>
@@ -447,7 +506,7 @@ const Home = () => {
           flex-direction: column;
         }
         .method {
-          margin-top:20px;
+          margin-top:5px;
         }
         .method >div:nth-child(3) {
           flex: 1
@@ -457,6 +516,9 @@ const Home = () => {
         // .method > input {
         //   flex: 1;
         // }
+        .otherParams+span{
+          font-size: 12px;
+        }
       `}</style>
     </div>
   )
