@@ -174,8 +174,8 @@ const methods = [
   },
   {
     name: 'test_chain',
-    params: ['token','peers','boots','interval','propose','prevote','precommit'],
-    defaultValues: ['0000','[]','[]','3000','10','10','10'],
+    params: ['token','peers','boots','interval','propose','prevote','precommit','log_level'],
+    defaultValues: ['0000','[]','[]','3000','10','10','10',''],
 
   },
   {
@@ -202,8 +202,8 @@ const methods = [
   },
   {
     name: 'test_net',
-    params: ['token','peers','boots','mode','packet','batch'],
-    defaultValues: ['0000','[]','[]','tentacle','400','20'],
+    params: ['token','peers','boots','mode','packet','batch','log_level'],
+    defaultValues: ['0000','[]','[]','tentacle','400','20',''],
 
   },
   {
